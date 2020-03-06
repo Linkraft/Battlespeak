@@ -1,4 +1,5 @@
 import sys, pygame
+from array import *
 
 #sprites from https://opengameart.org/content/battleships
 
@@ -10,14 +11,24 @@ size = width, height = 1020, 600
 speed = [2, 2]
 black = 0, 0, 0
 white = 255, 255, 255
+red = 255, 0, 0
 pale_blue = 118, 142, 181
 blue = 81, 120, 181
 dark_blue = 53, 88, 143
+transparent = (0, 0, 0, 0)
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Battleship')
 
 gridImg = pygame.image.load('assets/grid.png')
+fiveBoat = pygame.image.load('assets/fiveBoat.png')
+fourBoat = pygame.image.load('assets/fourBoat.png')
+threeBoat1 = pygame.image.load('assets/threeBoat1.png')
+threeBoat2 = pygame.image.load('assets/threeBoat2.png')
+twoBoat = pygame.image.load('assets/twoBoat.png')
+
+boatArray = [fiveBoat, fourBoat, threeBoat1, threeBoat2, twoBoat]
+
 
 #functions
 def button(msg,x,y,width,height,iColor,aColor, action=None):
@@ -67,16 +78,65 @@ def game_intro():
 
 def game_loop():
     screen.fill(blue)
-    gameExit = False
 
+    titleFont = pygame.font.Font('freesansbold.ttf', 20)
+
+    ybText = titleFont.render('Your Board', True, white)
+    ybTextRect = ybText.get_rect()
+    ybTextRect.center = (width // 4, 20)
+
+    obText = titleFont.render('Opponent Board', True, white)
+    obTextRect = obText.get_rect()
+    obTextRect.center = (750, 20)
+
+    screen.blit(ybText, ybTextRect)
+    screen.blit(obText, obTextRect)
+
+    #temporary placement of opponent battleships
+    opponentShips = [[0,1,1,1,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0],
+                    [1,0,0,0,0,0,0,0,0,0],
+                    [1,0,0,0,0,0,0,0,0,0],
+                    [1,0,0,0,0,0,1,1,0,0],
+                    [1,0,0,0,0,0,0,0,0,0],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [0,0,1,1,1,1,0,0,0,1],
+                    [0,0,0,0,0,0,0,0,0,1],
+                    [0,0,0,0,0,0,0,0,0,0]]
+
+    userShips = [[0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0]]
+
+    gameExit = False
     while not gameExit:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
 
-        screen.blit(gridImg, (5,5))
-        screen.blit(gridImg, (525, 5))
+        screen.blit(gridImg, (15,40))
+        screen.blit(gridImg, (570, 40))
+
+        #user places their boats
+
+        screen.blit(boatArray[0], (width // 2 - 10, 200))
+
+        bpText = titleFont.render('Will your 5 boat be horizontal or vertical?', True, black)
+        bpTextRect = bpText.get_rect()
+        bpTextRect.center = (width // 2, height // 2 + 200)
+        screen.blit(bpText, bpTextRect)
+
+
+
+
 
         pygame.display.update()
         clock.tick(60)
