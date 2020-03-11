@@ -27,6 +27,7 @@ threeBoat2 = pygame.image.load('assets/threeBoat2V.png')
 twoBoat = pygame.image.load('assets/twoBoatV.png')
 
 boatArray = [fiveBoat, fourBoat, threeBoat1, threeBoat2, twoBoat]
+stopGameArray = ["stop", "stop game", "end", "end game", "quit", "quit game"]
 
 def speakText(speech, filename):
     file = filename + '.mp3'
@@ -58,6 +59,7 @@ def placeBoats():
         #fill in the empty areas with blue so that the boats don't blit on top of each other
         #rect parameters: Surface, color, Rect (x, y, width, height)
         pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
+        pygame.draw.rect(screen, blue, ((width // 4 + 50), 500, 400, 100))
         #blit the boat to the screen
         screen.blit(boatArray[boatsPlaced], (width // 2 - 20, height // 2 - 100))
         pygame.display.update()
@@ -79,32 +81,47 @@ def placeBoats():
             speakText("I didn't quite catch that. Please try again!", "ad")
 
         if command == "horizontal":
+            #clear the vertical space
+            pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
+            #display the boat horizontally
+            if boatsPlaced == 0:
+                boatArray[boatsPlaced] = pygame.image.load('assets/fiveBoatH.png')
+            elif boatsPlaced == 1:
+                boatArray[boatsPlaced] = pygame.image.load('assets/fourBoatH.png')
+            elif boatsPlaced == 2:
+                boatArray[boatsPlaced] = pygame.image.load('assets/threeBoat1H.png')
+            elif boatsPlaced == 3:
+                boatArray[boatsPlaced] = pygame.image.load('assets/threeBoat2H.png')
+            elif boatsPlaced == 4:
+                boatArray[boatsPlaced] = pygame.image.load('assets/twoBoatH.png')
+
+            screen.blit(boatArray[boatsPlaced], (width // 2 - 60, height // 2 + 200))
+            pygame.display.update()
+
+            speakText("Which square of the grid should the tip of this boat be placed?", "bp")
+            #get valid positions based on the size and orientation of each boat and the current placement of boats
+            #if command is valid, place the boat at the given location
+            #if command is not valid, tell the user and prompt them to pick a valid position
+
             #increment while loop
             boatsPlaced = boatsPlaced + 1
 
-            #display the boat horizontally -- TO DO
+        elif command == "vertical":
 
             speakText("Which square of the grid should the tip of this boat be placed?", "bp")
             #get valid positions based on the size and orientation of each boat and the current placement of boats
             #if command is valid, place the boat at the given location
             #if command is not valid, tell the user and prompt them to pick a valid position
 
-        elif command == "vertical":
             #increment while loop
             boatsPlaced += 1
 
-            speakText("Which square of the grid should the tip of this boat be placed?", "bp")
-            #get valid positions based on the size and orientation of each boat and the current placement of boats
-            #if command is valid, place the boat at the given location
-            #if command is not valid, tell the user and prompt them to pick a valid position
         elif command == "quit" or command == "quit game" or command == "end" or command == "end game":
+            speakText("Goodbye!", "a")
             pygame.quit()
             sys.exit()
         else:
             speakText("Sorry, that isn't a valid response. Please try again.", "fr")
-
-
-
 
 
 def game_intro():
@@ -145,7 +162,8 @@ def game_intro():
             sayRules()
         elif command == "no":
             validCommand = True
-        elif command == "quit" or command == "quit game" or command == "end" or command == "end game":
+        elif command in stopGameArray:
+            speakText("Goodbye!", "a")
             pygame.quit()
             sys.exit()
 
@@ -171,8 +189,14 @@ def game_intro():
         except sr.UnknownValueError:
             speakText("Whoops! You just spoke some nonsense. Try again!", "ad")
 
-    if command == "start":
+    if command == "start" or command == "start game":
         game_loop()
+    elif command in stopGameArray:
+        speakText("Goodbye!", "a")
+        pygame.quit()
+        sys.exit()
+    else:
+        speakText("Sorry, that isn't a valid response. Please try again.", "fr")
 
 def game_loop():
     #render the game screen with titles and boards
