@@ -20,11 +20,13 @@ screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Battlespeak')
 
 gridImg = pygame.image.load('assets/grid.png')
-fiveBoat = pygame.image.load('assets/fiveBoat.png')
-fourBoat = pygame.image.load('assets/fourBoat.png')
-threeBoat1 = pygame.image.load('assets/threeBoat1.png')
-threeBoat2 = pygame.image.load('assets/threeBoat2.png')
-twoBoat = pygame.image.load('assets/twoBoat.png')
+fiveBoat = pygame.image.load('assets/fiveBoatV.png')
+fourBoat = pygame.image.load('assets/fourBoatV.png')
+threeBoat1 = pygame.image.load('assets/threeBoat1V.png')
+threeBoat2 = pygame.image.load('assets/threeBoat2V.png')
+twoBoat = pygame.image.load('assets/twoBoatV.png')
+
+boatArray = [fiveBoat, fourBoat, threeBoat1, threeBoat2, twoBoat]
 
 def speakText(speech, filename):
     file = filename + '.mp3'
@@ -46,7 +48,64 @@ def sayCommands():
             to bomb, please say the coordinates in this form:", "b")
     speakText("Bomb D1", "c")
     speakText("where, D1, would be replaced with your desired coordinates", "a")
-    speakText("Begin the game by saying start", "a")
+    speakText("Finally, to begin the game, say start", "a")
+
+def placeBoats():
+
+    boatsPlaced = 0
+    while boatsPlaced < 5:
+        command = ""
+        #fill in the empty areas with blue so that the boats don't blit on top of each other
+        #rect parameters: Surface, color, Rect (x, y, width, height)
+        pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
+        #blit the boat to the screen
+        screen.blit(boatArray[boatsPlaced], (width // 2 - 20, height // 2 - 100))
+        pygame.display.update()
+        speakText("Would you like this boat to be horizontal or vertical?", "a")
+
+        with mic as source:
+            speakText("Hold on a moment","aa")
+            r.adjust_for_ambient_noise(source)
+            speakText("Now say your command:", "aaa")
+            audio = r.listen(source)
+
+        try:
+            print(r.recognize_google(audio))
+            command = r.recognize_google(audio)
+        except sr.RequestError:
+            speakText("The Google API didn't work for some reason","ab")
+            speakText("Make sure this computer is connected to the Internet", "ac")
+        except sr.UnknownValueError:
+            speakText("I didn't quite catch that. Please try again!", "ad")
+
+        if command == "horizontal":
+            #increment while loop
+            boatsPlaced = boatsPlaced + 1
+
+            #display the boat horizontally -- TO DO
+
+            speakText("Which square of the grid should the tip of this boat be placed?", "bp")
+            #get valid positions based on the size and orientation of each boat and the current placement of boats
+            #if command is valid, place the boat at the given location
+            #if command is not valid, tell the user and prompt them to pick a valid position
+
+        elif command == "vertical":
+            #increment while loop
+            boatsPlaced += 1
+
+            speakText("Which square of the grid should the tip of this boat be placed?", "bp")
+            #get valid positions based on the size and orientation of each boat and the current placement of boats
+            #if command is valid, place the boat at the given location
+            #if command is not valid, tell the user and prompt them to pick a valid position
+        elif command == "quit" or command == "quit game" or command == "end" or command == "end game":
+            pygame.quit()
+            sys.exit()
+        else:
+            speakText("Sorry, that isn't a valid response. Please try again.", "fr")
+
+
+
+
 
 def game_intro():
     screen.fill(pale_blue)
@@ -60,7 +119,35 @@ def game_intro():
     screen.blit(titleText, titleTextRect)
 
     pygame.display.update()
-    sayRules()
+
+
+    validCommand = False
+    while not validCommand:
+        command = ""
+        speakText("Would you like to hear the rules?", "a")
+        with mic as source:
+            speakText("Hold on a moment","aa")
+            r.adjust_for_ambient_noise(source)
+            speakText("Now say your command:", "aaa")
+            audio = r.listen(source)
+
+        try:
+            print(r.recognize_google(audio))
+            command = r.recognize_google(audio)
+        except sr.RequestError:
+            speakText("The Google API didn't work for some reason","ab")
+            speakText("Make sure this computer is connected to the Internet", "ac")
+        except sr.UnknownValueError:
+            speakText("I didn't quite catch that. Please try again!", "ad")
+
+        if command == "yes":
+            validCommand = True
+            sayRules()
+        elif command == "no":
+            validCommand = True
+        elif command == "quit" or command == "quit game" or command == "end" or command == "end game":
+            pygame.quit()
+            sys.exit()
 
     intro = True
     while intro:
@@ -88,6 +175,7 @@ def game_intro():
         game_loop()
 
 def game_loop():
+    #render the game screen with titles and boards
     screen.fill(blue)
 
     titleFont = pygame.font.Font('freesansbold.ttf', 20)
@@ -103,6 +191,8 @@ def game_loop():
     screen.blit(ybText, ybTextRect)
     screen.blit(obText, obTextRect)
 
+    screen.blit(gridImg, (15,40))
+    screen.blit(gridImg, (570, 40))
     #temporary placement of opponent battleships
     opponentShips = [[0,1,1,1,0,0,0,0,0,0],
                     [0,0,0,0,0,0,0,0,0,0],
@@ -126,31 +216,10 @@ def game_loop():
                 [0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0]]
 
-    gameExit = False
-    while not gameExit:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+    pygame.display.update()
 
-        screen.blit(gridImg, (15,40))
-        screen.blit(gridImg, (570, 40))
-
-        #user places their boats
-
-        screen.blit(fiveBoat, (width // 2 - 10, 200))
-
-        bpText = titleFont.render('Will your 5 boat be horizontal or vertical?', True, black)
-        bpTextRect = bpText.get_rect()
-        bpTextRect.center = (width // 2, height // 2 + 200)
-        screen.blit(bpText, bpTextRect)
-
-
-
-
-
-        pygame.display.update()
-        clock.tick(60)
+    #user places their boats
+    placeBoats()
 
 
 
