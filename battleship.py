@@ -25,9 +25,9 @@ fourBoat = pygame.image.load('assets/fourBoatV.png')
 threeBoat1 = pygame.image.load('assets/threeBoat1V.png')
 threeBoat2 = pygame.image.load('assets/threeBoat2V.png')
 twoBoat = pygame.image.load('assets/twoBoatV.png')
-position = ""
 
 boatArray = [fiveBoat, fourBoat, threeBoat1, threeBoat2, twoBoat]
+sizeBoatArray = [5, 4, 3, 3, 2]
 stopGameArray = ["stop", "stop game", "end", "end game", "quit", "quit game"]
 letterArray = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
@@ -52,8 +52,6 @@ def sayCommands():
     speakText("Bomb D1", "c")
     speakText("where, D1, would be replaced with your desired coordinates", "a")
     speakText("Finally, to begin the game, say start", "a")
-
-#def moveBoat(ori, lett, num):
 
 
 def placeBoats():
@@ -86,9 +84,10 @@ def placeBoats():
             speakText("I didn't quite catch that. Please try again!", "ad")
             continue
 
+        orient = ""
         if command == "horizontal" or command == "vertical":
             if command == "horizontal":
-                position = "horizontal"
+                orient = "horizontal"
                 #clear the vertical space
                 pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
                 #display the boat horizontally
@@ -105,11 +104,11 @@ def placeBoats():
 
                 imgSize = boatArray[boatsPlaced].get_size()
                 imgWidth = imgSize[0]
-                screen.blit(boatArray[boatsPlaced], (width // 2 - (imgWidth // 2), height // 2 + 200))
+                screen.blit(boatArray[boatsPlaced], (width // 2 - (imgWidth // 2), height // 2 + 220))
                 pygame.display.update()
 
             elif command == "vertical":
-                position = "vertical"
+                orient = "vertical"
 
             valid = False
             while not valid:
@@ -157,14 +156,33 @@ def placeBoats():
                 #fixes errors like H8 = "h8"
                 command = command.capitalize()
 
-                #check for errors like F7 = "S7"
-                if command[0] in letterArray:
-                    break
-                else:
-                    speakText("That letter isn't valid. Please try a different letter or try again more slowly!", "ad")
+                #fixes error where recognition thinks "F" sounds like "S" very often
+                if command[0] == 'S':
+                    command[0] = 'F'
 
-            print(command)
-            #increment while loop
+                #check for errors if the user says something like "K4"
+                if command[0] not in letterArray:
+                    speakText("That letter isn't valid. Please try a different letter or try again more slowly!", "ad")
+                    continue
+
+                print("Current orientation: ", orient)
+                print("Current size of boat: ", sizeBoatArray[boatsPlaced])
+                print("Current command: ", command)
+                print("Checking if the position is allowed...")
+
+                #check if the position is allowed, based on size and orientation of ship
+                isAllowed = checkPosition(orient, sizeBoatArray[boatsPlaced], command)
+
+                if isAllowed:
+                    print("Allowed!")
+                    speakText("Boat placed.", "cm")
+                    valid = True
+                else:
+                    print("Not allowed!")
+                    speakText("That position isn't valid due to boat size and orientation. Please try another space.", "rm")
+                    valid = False
+
+            #increment while loop if command was "horizontal" or "vertical"
             boatsPlaced += 1
 
         elif command in stopGameArray:
@@ -173,6 +191,74 @@ def placeBoats():
             sys.exit()
         else:
             speakText("I couldn't recognize that. Please try again.", "fr")
+
+def checkPosition(orient, size, square):
+    #first split the square var into letter and number
+    letter = square[0]
+    number = 0
+    if len(square) == 2:
+        number = int(square[1], 10)
+    elif len(square) == 3:
+        number = int(square[-2:], 10)
+
+    #use orient, size, letter, and number to determine if boat is in valid position
+
+    #if vertical, invalid letters are (G-J for 5boat), (H-J for 4boat), (I-J for 3boat), (J for 2boat)
+    if orient == "vertical":
+        if size == 5:
+            invalidArray = ['G', 'H', 'I', 'J']
+            if letter in invalidArray:
+                return False
+            else:
+                return True
+        elif size == 4:
+            invalidArray = ['H', 'I', 'J']
+            if letter in invalidArray:
+                return False
+            else:
+                return True
+        elif size == 3:
+            invalidArray = ['I', 'J']
+            if letter in invalidArray:
+                return False
+            else:
+                return True
+        #if size is 2
+        else:
+            if letter == 'J':
+                return False
+            else:
+                return True
+        #default return statement
+        return False
+
+
+    #if horiz, invalid numbers are (7-10 for 5boat), (8-10 for 4boat), (9-10 for 3boat), (10 for 2boat)
+    else:
+        if size == 5:
+            if number > 6:
+                return False
+            elif number > 0:
+                return True
+        elif size == 4:
+            if number > 7:
+                return False
+            elif number > 0:
+                return True
+        elif size == 3:
+            if number > 8:
+                return False
+            elif number > 0:
+                return True
+
+        #size == 2
+        else:
+            if number > 9:
+                return False
+            elif number > 0:
+                return True
+        #default return statement
+        return False
 
 
 def game_intro():
