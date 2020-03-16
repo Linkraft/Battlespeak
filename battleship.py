@@ -1,5 +1,5 @@
 import speech_recognition as sr
-import gtts, playsound, time, os
+import gtts, playsound, time, os, random
 import sys, pygame
 from array import *
 
@@ -31,6 +31,26 @@ sizeBoatArray = [5, 4, 3, 3, 2]
 stopGameArray = ["stop", "stop game", "end", "end game", "quit", "quit game"]
 letterArray = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
+global userShips, opponentShips, playerHits, opponentHits
+
+def recognize_speech():
+    while True:
+        with mic as source:
+            speakText("Hold on a moment","aa")
+            r.adjust_for_ambient_noise(source)
+            speakText("Now say your command:", "aaa")
+            audio = r.listen(source)
+            try:
+                print(r.recognize_google(audio))
+                command = r.recognize_google(audio)
+                break
+            except sr.RequestError:
+                speakText("The Google API didn't work for some reason","ab")
+                speakText("Make sure this computer is connected to the Internet", "ac")
+            except sr.UnknownValueError:
+                speakText("I didn't quite catch that. Please try again!", "ad")
+    return command
+
 def speakText(speech, filename):
     file = filename + '.mp3'
     mp3 = gtts.gTTS(text=speech, lang='en', slow=False)
@@ -52,6 +72,43 @@ def sayCommands():
     speakText("Bomb D1", "c")
     speakText("where, D1, would be replaced with your desired coordinates", "a")
     speakText("Finally, to begin the game, say start", "a")
+
+def validateCoordinates(command):
+    while True:
+        #input checks
+        #check for speech recognition error where I1 is recognized always as "I won"
+        if command == "I won":
+            command = "I1"
+            break
+
+        #fixes errors like I4 = "I-4"
+        command = command.replace('-', '')
+
+        #check for errors like B4 = "before" or A2 = "82"
+        if len(command) > 3 or command[0].isdigit():
+            speakText("I don't understand that. Please try again more slowly!", "ad")
+            command = recognize_speech()
+            continue
+        #check for errors like F7 = "ff7"
+        elif not command[1].isdigit():
+            speakText("That command is invalid. Please try again more slowly!", "ad")
+            command = recognize_speech()
+            continue
+
+        #fixes errors like H8 = "h8"
+        command = command.capitalize()
+
+        #fixes error where recognition thinks "F" sounds like "S" very often
+        if command[0] == 'S':
+            command[0] = 'F'
+
+        #check for errors if the user says something like "K4"
+        if command[0] not in letterArray:
+            speakText("That letter isn't valid. Please try a different letter or try again more slowly!", "ad")
+            command = recognize_speech()
+            continue
+        break
+    return command
 
 
 def placeBoats():
@@ -260,6 +317,62 @@ def checkPosition(orient, size, square):
         #default return statement
         return False
 
+def player_turn():
+    speakText("Which coordinate would you like to bomb?", "bomb?")
+
+    coordinate = recognize_speech()
+    coordinate = validateCoordinates(coordinate)
+
+    vertical = coordinate[:1]
+    horizontal = coordinate[1:]
+
+    if opponentShips[int(vertical) - int('A'))][horizontal] == 1:
+        print('Hit!')
+        opponentShips[int(vertical) - int('A'))][horizontal] = 'X'
+        speakText("Congratulations! You scored a hit!", "hit")
+        playerHits += 1
+
+    elif opponentShips[int(vertical) - int('A'))][horizontal] == 'X' or opponentShips[int(vertical) - int('A'))][horizontal] == '*':
+        speakText("You have already bombed that spot. Please choose another")
+        player_turn()
+        return
+    
+    else:
+        opponentShips[int(vertical) - int('A'))][horizontal] = '*'
+        speakText("Sorry, your bomb did not land a hit")
+
+def opponent_turn():
+    horizontal = random.randint(0, 9)
+    vertical = random.randint(0, 9)
+
+    if userShips[vertical][horizontal] == '*' or userShips[vertical][horizontal] == 'X':
+        opponent_turn()
+        return
+    
+    elif userShips[vertical][horizontal] == '0':
+        speakText("Your opponent chose coordinate " + vertical + horizontal + " and missed")
+        userShips[vertical][horizontal] = '*'
+
+    elif userShips[vertical][horizontal] == '1':
+        speakText("Your opponent chose coordinate " + vertical + horizontal + " and hit")
+        userShips[vertical][horizontal] = 'X'
+        opponentHits += 1
+
+def turn_loop():
+    playerHits = 0
+    opponentHits = 0
+
+    while True:
+        player_turn()
+        if playerHits == 17:
+            speakText("Congratulations! You have sunk all the enemy ships.", "win")
+            break
+        opponent_turn()
+        if opponentHits == 17:
+            speakText("Sorry, all your ships have been sunk.", "lose")
+            break
+
+    
 
 def game_intro():
     screen.fill(pale_blue)
@@ -381,6 +494,8 @@ def game_loop():
 
     #user places their boats
     placeBoats()
+
+    turn_loop()
 
 
 
