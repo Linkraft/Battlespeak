@@ -32,6 +32,28 @@ stopGameArray = ["stop", "stop game", "end", "end game", "quit", "quit game"]
 letterArray = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
 global userShips, opponentShips, playerHits, opponentHits
+#temporary placement of opponent battleships
+opponentShips = [[0,1,1,1,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,0,1,1,0,0],
+                [1,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,0,0,0,0,1],
+                [0,0,1,1,1,1,0,0,0,1],
+                [0,0,0,0,0,0,0,0,0,1],
+                [0,0,0,0,0,0,0,0,0,0]]
+
+userShips = [[0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0]]
 
 def recognize_speech():
     while True:
@@ -58,12 +80,11 @@ def speakText(speech):
     playsound.playsound(file, True)
     os.remove(file)
 
-def sayRules():
+def sayIntro():
     speakText("Welcome to Battlespeak!\
             This is a voice-controlled version of the popular\
             board game Battleship. To play, you must give commands\
             to the program with your voice.")
-    sayCommands()
 
 def sayCommands():
     speakText("Here are the list of commands available to you:")
@@ -100,7 +121,7 @@ def validateCoordinates(command):
 
         #fixes error where recognition thinks "F" sounds like "S" very often
         if command[0] == 'S':
-            command[0] = 'F'
+            command = command.replace('S', 'F')
 
         #check for errors if the user says something like "K4"
         if command[0] not in letterArray:
@@ -326,19 +347,19 @@ def player_turn():
     vertical = coordinate[:1]
     horizontal = coordinate[1:]
 
-    if opponentShips[int(vertical) - int('A')][horizontal] == 1:
+    if opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 1:
         print('Hit!')
-        opponentShips[int(vertical) - int('A')][horizontal] = 'X'
+        opponentShips[ord(vertical) - ord('A')][int(horizontal)] = 'X'
         speakText("Congratulations! You scored a hit!")
         playerHits += 1
 
-    elif opponentShips[int(vertical) - int('A')][horizontal] == 'X' or opponentShips[int(vertical) - int('A')][horizontal] == '*':
+    elif opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 'X' or opponentShips[ord(vertical) - ord('A')][int(horizontal)] == '*':
         speakText("You have already bombed that spot. Please choose another")
         player_turn()
         return
-    
+
     else:
-        opponentShips[int(vertical) - int('A')][horizontal] = '*'
+        opponentShips[ord(vertical) - ord('A')][int(horizontal)] = '*'
         speakText("Sorry, your bomb did not land a hit")
 
 def opponent_turn():
@@ -348,7 +369,7 @@ def opponent_turn():
     if userShips[vertical][horizontal] == '*' or userShips[vertical][horizontal] == 'X':
         opponent_turn()
         return
-    
+
     elif userShips[vertical][horizontal] == '0':
         speakText("Your opponent chose coordinate " + vertical + horizontal + " and missed")
         userShips[vertical][horizontal] = '*'
@@ -359,6 +380,12 @@ def opponent_turn():
         opponentHits += 1
 
 def turn_loop():
+    #clear the vertical space
+    pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
+    #clear the horizontal space
+    pygame.draw.rect(screen, blue, ((width // 4 + 50), 500, 400, 100))
+    pygame.display.update()
+
     playerHits = 0
     opponentHits = 0
 
@@ -372,7 +399,7 @@ def turn_loop():
             speakText("Sorry, all your ships have been sunk.")
             break
 
-    
+
 
 def game_intro():
     screen.fill(pale_blue)
@@ -387,7 +414,7 @@ def game_intro():
 
     pygame.display.update()
 
-
+    sayIntro()
     validCommand = False
     while not validCommand:
         command = ""
@@ -409,9 +436,10 @@ def game_intro():
 
         if command == "yes":
             validCommand = True
-            sayRules()
+            sayCommands()
         elif command == "no":
             validCommand = True
+            speakText("Alright.")
         elif command in stopGameArray:
             speakText("Goodbye!")
             pygame.quit()
@@ -467,28 +495,7 @@ def game_loop():
 
     screen.blit(gridImg, (15,40))
     screen.blit(gridImg, (570, 40))
-    #temporary placement of opponent battleships
-    opponentShips = [[0,1,1,1,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0,0,0],
-                    [1,0,0,0,0,0,0,0,0,0],
-                    [1,0,0,0,0,0,0,0,0,0],
-                    [1,0,0,0,0,0,1,1,0,0],
-                    [1,0,0,0,0,0,0,0,0,0],
-                    [1,0,0,0,0,0,0,0,0,1],
-                    [0,0,1,1,1,1,0,0,0,1],
-                    [0,0,0,0,0,0,0,0,0,1],
-                    [0,0,0,0,0,0,0,0,0,0]]
 
-    userShips = [[0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0]]
 
     pygame.display.update()
 
