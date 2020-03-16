@@ -326,19 +326,19 @@ def player_turn():
     vertical = coordinate[:1]
     horizontal = coordinate[1:]
 
-    if opponentShips[int(vertical) - int('A'))][horizontal] == 1:
+    if opponentShips[int(vertical) - int('A')][horizontal] == 1:
         print('Hit!')
-        opponentShips[int(vertical) - int('A'))][horizontal] = 'X'
+        opponentShips[int(vertical) - int('A')][horizontal] = 'X'
         speakText("Congratulations! You scored a hit!", "hit")
         playerHits += 1
 
-    elif opponentShips[int(vertical) - int('A'))][horizontal] == 'X' or opponentShips[int(vertical) - int('A'))][horizontal] == '*':
+    elif opponentShips[int(vertical) - int('A')][horizontal] == 'X' or opponentShips[int(vertical) - int('A')][horizontal] == '*':
         speakText("You have already bombed that spot. Please choose another")
         player_turn()
         return
     
     else:
-        opponentShips[int(vertical) - int('A'))][horizontal] = '*'
+        opponentShips[int(vertical) - int('A')][horizontal] = '*'
         speakText("Sorry, your bomb did not land a hit")
 
 def opponent_turn():
