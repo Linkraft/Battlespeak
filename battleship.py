@@ -33,7 +33,8 @@ def speakText(speech, filename):
     file = filename + '.mp3'
     mp3 = gtts.gTTS(text=speech, lang='en', slow=False)
     mp3.save(file)
-    playsound.playsound(file, True)
+    sound = pygame.mixer.Sound(file)
+    pygame.mixer.Sound.play(sound)
     os.remove(file)
 
 def sayRules():
