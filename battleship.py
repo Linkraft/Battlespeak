@@ -122,6 +122,7 @@ def validateCoordinates(command):
         #fixes error where recognition thinks "F" sounds like "S" very often
         if command[0] == 'S':
             command = command.replace('S', 'F')
+            print("changed")
 
         #check for errors if the user says something like "K4"
         if command[0] not in letterArray:
