@@ -1,6 +1,7 @@
+import sys, pygame, time, os
 import speech_recognition as sr
-import gtts, playsound, time, os
-import sys, pygame
+from gtts import gTTS
+from tempfile import TemporaryFile
 from array import *
 
 #sprites from https://opengameart.org/content/battleships
@@ -27,32 +28,101 @@ threeBoat2 = pygame.image.load('assets/threeBoat2V.png')
 twoBoat = pygame.image.load('assets/twoBoatV.png')
 
 boatArray = [fiveBoat, fourBoat, threeBoat1, threeBoat2, twoBoat]
+sizeBoatArray = [5, 4, 3, 3, 2]
 stopGameArray = ["stop", "stop game", "end", "end game", "quit", "quit game"]
+letterArray = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
-def speakText(speech, filename):
-    file = filename + '.mp3'
-    mp3 = gtts.gTTS(text=speech, lang='en', slow=False)
-    mp3.save(file)
-    sound = pygame.mixer.Sound(file)
-    pygame.mixer.Sound.play(sound)
-    os.remove(file)
+global userShips, opponentShips, playerHits, opponentHits
+
+def say(speech):
+    try:
+        tts = gTTS(text=speech, lang='en', slow=False)
+        pygame.mixer.init()
+        sf = TemporaryFile()
+        tts.write_to_fp(sf)
+        sf.seek(0)
+        pygame.mixer.music.load(sf)
+        pygame.mixer.music.play()
+        print(speech) # For debugging purposes
+        # Now wait for the sound clip to end
+        while (pygame.mixer.music.get_busy()):
+            continue
+    except Exception:
+        raise
+
+def recognize_speech():
+    while True:
+        with mic as source:
+            say("Hold on a moment")
+            r.adjust_for_ambient_noise(source)
+            say("Now say your command:")
+            audio = r.listen(source)
+            try:
+                print(r.recognize_google(audio))
+                command = r.recognize_google(audio)
+                break
+            except sr.RequestError:
+                say("The Google API didn't work for some reason")
+                say("Make sure this computer is connected to the Internet")
+            except sr.UnknownValueError:
+                say("I didn't quite catch that. Please try again!")
+    return command
 
 def sayRules():
-    speakText("Welcome to Battlespeak!\
+    say("Welcome to Battlespeak!\
             This is a voice-controlled version of the popular\
             board game Battleship. To play, you must give commands\
-            to the program with your voice.", "f")
+            to the program with your voice. Please note that it\
+            takes a second or two to process voice commands")
     sayCommands()
 
 def sayCommands():
-    speakText("Here are the list of commands available to you:", "a")
-    speakText("To tell the program what coordinates you would like\
-            to bomb, please say the coordinates in this form:", "b")
-    speakText("Bomb D1", "c")
-    speakText("where, D1, would be replaced with your desired coordinates", "a")
-    speakText("Finally, to begin the game, say start", "a")
+    say("Here are the list of commands available to you:")
+    say("To tell the program what coordinates you would like\
+            to bomb, please say the coordinates in this form:")
+    say("Bomb D1")
+    say("where, D1, would be replaced with your desired coordinates")
+    say("Finally, to begin the game, say start")
 
-def placeBoats():
+def validateCoordinates(command):
+    while True:
+        #input checks
+        #check for speech recognition error where I1 is recognized always as "I won"
+        if command == "I won":
+            command = "I1"
+            break
+
+        #fixes errors like I4 = "I-4"
+        command = command.replace('-', '')
+
+        #check for errors like B4 = "before" or A2 = "82"
+        if len(command) > 3 or command[0].isdigit():
+            say("I don't understand that. Please try again more slowly!")
+            command = recognize_speech()
+            continue
+        #check for errors like F7 = "ff7"
+        elif not command[1].isdigit():
+            say("That command is invalid. Please try again more slowly!")
+            command = recognize_speech()
+            continue
+
+        #fixes errors like H8 = "h8"
+        command = command.capitalize()
+
+        #fixes error where recognition thinks "F" sounds like "S" very often
+        if command[0] == 'S':
+            command[0] = 'F'
+
+        #check for errors if the user says something like "K4"
+        if command[0] not in letterArray:
+            say("That letter isn't valid. Please try a different letter or try again more slowly!")
+            command = recognize_speech()
+            continue
+        break
+    return command
+
+
+def placeUserBoats():
 
     boatsPlaced = 0
     while boatsPlaced < 5:
@@ -64,66 +134,226 @@ def placeBoats():
         #blit the boat to the screen
         screen.blit(boatArray[boatsPlaced], (width // 2 - 20, height // 2 - 100))
         pygame.display.update()
-        speakText("Would you like this boat to be horizontal or vertical?", "a")
+        say("Would you like this boat to be horizontal or vertical?")
+        command = recognize_speech()
 
-        with mic as source:
-            speakText("Hold on a moment","aa")
-            r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:", "aaa")
-            audio = r.listen(source)
+        orient = ""
+        if command == "horizontal" or command == "vertical":
+            if command == "horizontal":
+                orient = "horizontal"
+                #clear the vertical space
+                pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
+                #display the boat horizontally
+                if boatsPlaced == 0:
+                    boatArray[boatsPlaced] = pygame.image.load('assets/fiveBoatH.png')
+                elif boatsPlaced == 1:
+                    boatArray[boatsPlaced] = pygame.image.load('assets/fourBoatH.png')
+                elif boatsPlaced == 2:
+                    boatArray[boatsPlaced] = pygame.image.load('assets/threeBoat1H.png')
+                elif boatsPlaced == 3:
+                    boatArray[boatsPlaced] = pygame.image.load('assets/threeBoat2H.png')
+                elif boatsPlaced == 4:
+                    boatArray[boatsPlaced] = pygame.image.load('assets/twoBoatH.png')
 
-        try:
-            print(r.recognize_google(audio))
-            command = r.recognize_google(audio)
-        except sr.RequestError:
-            speakText("The Google API didn't work for some reason","ab")
-            speakText("Make sure this computer is connected to the Internet", "ac")
-        except sr.UnknownValueError:
-            speakText("I didn't quite catch that. Please try again!", "ad")
+                imgSize = boatArray[boatsPlaced].get_size()
+                imgWidth = imgSize[0]
+                screen.blit(boatArray[boatsPlaced], (width // 2 - (imgWidth // 2), height // 2 + 220))
+                pygame.display.update()
 
-        if command == "horizontal":
-            #clear the vertical space
-            pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
-            #display the boat horizontally
-            if boatsPlaced == 0:
-                boatArray[boatsPlaced] = pygame.image.load('assets/fiveBoatH.png')
-            elif boatsPlaced == 1:
-                boatArray[boatsPlaced] = pygame.image.load('assets/fourBoatH.png')
-            elif boatsPlaced == 2:
-                boatArray[boatsPlaced] = pygame.image.load('assets/threeBoat1H.png')
-            elif boatsPlaced == 3:
-                boatArray[boatsPlaced] = pygame.image.load('assets/threeBoat2H.png')
-            elif boatsPlaced == 4:
-                boatArray[boatsPlaced] = pygame.image.load('assets/twoBoatH.png')
+            elif command == "vertical":
+                orient = "vertical"
 
-            screen.blit(boatArray[boatsPlaced], (width // 2 - 60, height // 2 + 200))
-            pygame.display.update()
+            valid = False
+            while not valid:
+                say("Which square of the grid should the tip of this boat be placed?")
+                command = recognize_speech()
 
-            speakText("Which square of the grid should the tip of this boat be placed?", "bp")
-            #get valid positions based on the size and orientation of each boat and the current placement of boats
-            #if command is valid, place the boat at the given location
-            #if command is not valid, tell the user and prompt them to pick a valid position
+                if command in stopGameArray:
+                    say("Goodbye!")
+                    pygame.quit()
+                    sys.exit()
 
-            #increment while loop
-            boatsPlaced = boatsPlaced + 1
+                #input checks
+                #check for speech recognition error where I1 is recognized always as "I won"
+                if command == "I won":
+                    command = "I1"
+                    break
 
-        elif command == "vertical":
+                #fixes errors like I4 = "I-4"
+                command = command.replace('-', '')
 
-            speakText("Which square of the grid should the tip of this boat be placed?", "bp")
-            #get valid positions based on the size and orientation of each boat and the current placement of boats
-            #if command is valid, place the boat at the given location
-            #if command is not valid, tell the user and prompt them to pick a valid position
+                #check for errors like B4 = "before" or A2 = "82"
+                if len(command) > 3 or command[0].isdigit():
+                    say("I don't understand that. Please try again more slowly!")
+                    continue
+                #check for errors like F7 = "ff7"
+                elif not command[1].isdigit():
+                    say("That command is invalid. Please try again more slowly!")
+                    continue
 
-            #increment while loop
+                #fixes errors like H8 = "h8"
+                command = command.capitalize()
+
+                #fixes error where recognition thinks "F" sounds like "S" very often
+                if command[0] == 'S':
+                    command[0] = 'F'
+
+                #check for errors if the user says something like "K4"
+                if command[0] not in letterArray:
+                    say("That letter isn't valid. Please try a different letter or try again more slowly!")
+                    continue
+
+                print("Current orientation: ", orient)
+                print("Current size of boat: ", sizeBoatArray[boatsPlaced])
+                print("Current command: ", command)
+                print("Checking if the position is allowed...")
+
+                #check if the position is allowed, based on size and orientation of ship
+                isAllowed = checkPosition(orient, sizeBoatArray[boatsPlaced], command)
+
+                if isAllowed:
+                    print("Allowed!")
+                    say("Boat placed.")
+                    valid = True
+                else:
+                    print("Not allowed!")
+                    say("That position isn't valid due to boat size and orientation. Please try another space.")
+                    valid = False
+
+            #increment while loop if command was "horizontal" or "vertical"
             boatsPlaced += 1
 
-        elif command == "quit" or command == "quit game" or command == "end" or command == "end game":
-            speakText("Goodbye!", "a")
+        elif command in stopGameArray:
+            say("Goodbye!")
             pygame.quit()
             sys.exit()
         else:
-            speakText("Sorry, that isn't a valid response. Please try again.", "fr")
+            say("I couldn't recognize that. Please try again.")
 
+def checkPosition(orient, size, square):
+    #first split the square var into letter and number
+    letter = square[0]
+    number = 0
+    if len(square) == 2:
+        number = int(square[1], 10)
+    elif len(square) == 3:
+        number = int(square[-2:], 10)
+
+    #use orient, size, letter, and number to determine if boat is in valid position
+
+    #if vertical, invalid letters are (G-J for 5boat), (H-J for 4boat), (I-J for 3boat), (J for 2boat)
+    if orient == "vertical":
+        if size == 5:
+            invalidArray = ['G', 'H', 'I', 'J']
+            if letter in invalidArray:
+                return False
+            else:
+                return True
+        elif size == 4:
+            invalidArray = ['H', 'I', 'J']
+            if letter in invalidArray:
+                return False
+            else:
+                return True
+        elif size == 3:
+            invalidArray = ['I', 'J']
+            if letter in invalidArray:
+                return False
+            else:
+                return True
+        #if size is 2
+        else:
+            if letter == 'J':
+                return False
+            else:
+                return True
+        #default return statement
+        return False
+
+
+    #if horiz, invalid numbers are (7-10 for 5boat), (8-10 for 4boat), (9-10 for 3boat), (10 for 2boat)
+    else:
+        if size == 5:
+            if number > 6:
+                return False
+            elif number > 0:
+                return True
+        elif size == 4:
+            if number > 7:
+                return False
+            elif number > 0:
+                return True
+        elif size == 3:
+            if number > 8:
+                return False
+            elif number > 0:
+                return True
+
+        #size == 2
+        else:
+            if number > 9:
+                return False
+            elif number > 0:
+                return True
+        #default return statement
+        return False
+
+def player_turn():
+    say("Which coordinate would you like to bomb?")
+
+    coordinate = recognize_speech()
+    coordinate = validateCoordinates(coordinate)
+
+    vertical = coordinate[:1]
+    horizontal = coordinate[1:]
+
+    if opponentShips[int(vertical) - int('A')][horizontal] == 1:
+        print('Hit!')
+        opponentShips[int(vertical) - int('A')][horizontal] = 'X'
+        say("Congratulations! You scored a hit!")
+        playerHits += 1
+
+    elif opponentShips[int(vertical) - int('A')][horizontal] == 'X' or opponentShips[int(vertical) - int('A')][horizontal] == '*':
+        say("You have already bombed that spot. Please choose another")
+        player_turn()
+        return
+    
+    else:
+        opponentShips[int(vertical) - int('A')][horizontal] = '*'
+        say("Sorry, your bomb did not land a hit")
+
+def opponent_turn():
+    horizontal = random.randint(0, 9)
+    vertical = random.randint(0, 9)
+
+    if userShips[vertical][horizontal] == '*' or userShips[vertical][horizontal] == 'X':
+        opponent_turn()
+        return
+    
+    elif userShips[vertical][horizontal] == '0':
+        say("Your opponent chose coordinate " + vertical + horizontal + " and missed")
+        userShips[vertical][horizontal] = '*'
+
+    elif userShips[vertical][horizontal] == '1':
+        say("Your opponent chose coordinate " + vertical + horizontal + " and hit")
+        userShips[vertical][horizontal] = 'X'
+        opponentHits += 1
+
+def turn_loop():
+    playerHits = 0
+    opponentHits = 0
+
+    while True:
+        player_turn()
+        if playerHits == 17:
+            say("Congratulations! You have sunk all the enemy ships.")
+            break
+        opponent_turn()
+        if opponentHits == 17:
+            say("Sorry, all your ships have been sunk.")
+            break
+
+    
 
 def game_intro():
     screen.fill(pale_blue)
@@ -142,21 +372,8 @@ def game_intro():
     validCommand = False
     while not validCommand:
         command = ""
-        speakText("Would you like to hear the rules?", "a")
-        with mic as source:
-            speakText("Hold on a moment","aa")
-            r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:", "aaa")
-            audio = r.listen(source)
-
-        try:
-            print(r.recognize_google(audio))
-            command = r.recognize_google(audio)
-        except sr.RequestError:
-            speakText("The Google API didn't work for some reason","ab")
-            speakText("Make sure this computer is connected to the Internet", "ac")
-        except sr.UnknownValueError:
-            speakText("I didn't quite catch that. Please try again!", "ad")
+        say("Would you like to hear the rules?")
+        command = recognize_speech()
 
         if command == "yes":
             validCommand = True
@@ -164,40 +381,24 @@ def game_intro():
         elif command == "no":
             validCommand = True
         elif command in stopGameArray:
-            speakText("Goodbye!", "a")
+            say("Goodbye!")
             pygame.quit()
             sys.exit()
 
-    intro = True
-    while intro:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-        with mic as source:
-            speakText("Hold on a moment","aa")
-            r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:", "aaa")
-            audio = r.listen(source)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
 
-        try:
-            print(r.recognize_google(audio))
-            command = r.recognize_google(audio)
-            intro = False
-            break
-        except sr.RequestError:
-            speakText("The Google API didn't work for some reason","ab")
-            speakText("Make sure this computer is connected to the Internet", "ac")
-        except sr.UnknownValueError:
-            speakText("Whoops! You just spoke some nonsense. Try again!", "ad")
+    command = recognize_speech()
 
     if command == "start" or command == "start game":
         game_loop()
     elif command in stopGameArray:
-        speakText("Goodbye!", "a")
+        say("Goodbye!")
         pygame.quit()
         sys.exit()
     else:
-        speakText("Sorry, that isn't a valid response. Please try again.", "fr")
+        say("Sorry, that isn't a valid response. Please try again.")
 
 def game_loop():
     #render the game screen with titles and boards
@@ -244,7 +445,9 @@ def game_loop():
     pygame.display.update()
 
     #user places their boats
-    placeBoats()
+    placeUserBoats()
+    #placeCPUBoats()
+    turn_loop()
 
 
 
