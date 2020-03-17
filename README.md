@@ -1,15 +1,12 @@
 # Battlespeak
-Battleship game that utilizes speech for interaction between the player and computer opponent.
-
-## Usage
-TODO
+Battleship game that utilizes speech for interaction between the player and a computer opponent
 
 ## Dependencies
 - Python v. 3.6.0
 - SpeechRecognition v. 3.8.1
   - PyAudio v. 0.2.11
 - PyGame v. 1.9.6
-- Playsound 1.2.2
+- [tts](https://github.com/DeepHorizons/tts) v. 0.1
 - gTTS 2.1.1
 
 ## Acknowledgements
