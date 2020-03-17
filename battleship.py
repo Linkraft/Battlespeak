@@ -1,6 +1,7 @@
+import sys, pygame, time, os, random, uuid
 import speech_recognition as sr
-import gtts, playsound, time, os, random, uuid
-import sys, pygame
+from gtts import gTTS
+from tempfile import TemporaryFile
 from array import *
 
 #sprites from https://opengameart.org/content/battleships
@@ -55,44 +56,55 @@ userShips = [[0,0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0,0]]
 
+def say(speech):
+    try:
+        tts = gTTS(text=speech, lang='en', slow=False)
+        pygame.mixer.init()
+        sf = TemporaryFile()
+        tts.write_to_fp(sf)
+        sf.seek(0)
+        pygame.mixer.music.load(sf)
+        pygame.mixer.music.play()
+        print(speech) # For debugging purposes
+        # Now wait for the sound clip to end
+        while (pygame.mixer.music.get_busy()):
+            continue
+    except Exception:
+        raise
+
 def recognize_speech():
     while True:
         with mic as source:
-            speakText("Hold on a moment")
+            say("Hold on a moment")
             r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:")
+            say("Now say your command:")
             audio = r.listen(source)
             try:
                 print(r.recognize_google(audio))
                 command = r.recognize_google(audio)
                 break
             except sr.RequestError:
-                speakText("The Google API didn't work for some reason")
-                speakText("Make sure this computer is connected to the Internet")
+                say("The Google API didn't work for some reason")
+                say("Make sure this computer is connected to the Internet")
             except sr.UnknownValueError:
-                speakText("I didn't quite catch that. Please try again!")
+                say("I didn't quite catch that. Please try again!")
     return command
 
-def speakText(speech):
-    file = str(uuid.uuid1()) + '.mp3'
-    mp3 = gtts.gTTS(text=speech, lang='en', slow=False)
-    mp3.save(file)
-    playsound.playsound(file, True)
-    os.remove(file)
-
 def sayIntro():
-    speakText("Welcome to Battlespeak!\
+    say("Welcome to Battlespeak!\
             This is a voice-controlled version of the popular\
             board game Battleship. To play, you must give commands\
-            to the program with your voice.")
+            to the program with your voice. Please note that voice\
+            commands take time to process, so please be patient\
+            when waiting to input a command or for it to be recognized.")
 
 def sayCommands():
-    speakText("Here are the list of commands available to you:")
-    speakText("To tell the program what coordinates you would like\
+    say("Here are the list of commands available to you:")
+    say("To tell the program what coordinates you would like\
             to bomb, please say the coordinates in this form:")
-    speakText("Bomb D1")
-    speakText("where, D1, would be replaced with your desired coordinates")
-    speakText("Finally, to begin the game, say start")
+    say("D1")
+    say("where, D1, would be replaced with your desired coordinates")
+    say("Finally, to begin the game, say start")
 
 def validateCoordinates(command):
     while True:
@@ -107,12 +119,12 @@ def validateCoordinates(command):
 
         #check for errors like B4 = "before" or A2 = "82"
         if len(command) > 3 or command[0].isdigit():
-            speakText("I don't understand that. Please try again more slowly!")
+            say("I don't understand that. Please try again more slowly!")
             command = recognize_speech()
             continue
         #check for errors like F7 = "ff7"
         elif not command[1].isdigit():
-            speakText("That command is invalid. Please try again more slowly!")
+            say("That command is invalid. Please try again more slowly!")
             command = recognize_speech()
             continue
 
@@ -126,7 +138,7 @@ def validateCoordinates(command):
 
         #check for errors if the user says something like "K4"
         if command[0] not in letterArray:
-            speakText("That letter isn't valid. Please try a different letter or try again more slowly!")
+            say("That letter isn't valid. Please try a different letter or try again more slowly!")
             command = recognize_speech()
             continue
         break
@@ -145,22 +157,22 @@ def placeBoats():
         #blit the boat to the screen
         screen.blit(boatArray[boatsPlaced], (width // 2 - 20, height // 2 - 100))
         pygame.display.update()
-        speakText("Would you like this boat to be horizontal or vertical?")
+        say("Would you like this boat to be horizontal or vertical?")
 
         with mic as source:
-            speakText("Hold on a moment")
+            say("Hold on a moment")
             r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:")
+            say("Now say your command:")
             audio = r.listen(source)
 
         try:
             print(r.recognize_google(audio))
             command = r.recognize_google(audio)
         except sr.RequestError:
-            speakText("The Google API didn't work for some reason")
-            speakText("Make sure this computer is connected to the Internet")
+            say("The Google API didn't work for some reason")
+            say("Make sure this computer is connected to the Internet")
         except sr.UnknownValueError:
-            speakText("I didn't quite catch that. Please try again!")
+            say("I didn't quite catch that. Please try again!")
             continue
 
         orient = ""
@@ -191,26 +203,26 @@ def placeBoats():
 
             valid = False
             while not valid:
-                speakText("Which square of the grid should the tip of this boat be placed?")
+                say("Which square of the grid should the tip of this boat be placed?")
                 command = ""
                 with mic as source:
-                    speakText("Hold on a moment")
+                    say("Hold on a moment")
                     r.adjust_for_ambient_noise(source)
-                    speakText("Now say your command:")
+                    say("Now say your command:")
                     audio = r.listen(source)
 
                 try:
                     print(r.recognize_google(audio))
                     command = r.recognize_google(audio)
                 except sr.RequestError:
-                    speakText("The Google API didn't work for some reason")
-                    speakText("Make sure this computer is connected to the Internet")
+                    say("The Google API didn't work for some reason")
+                    say("Make sure this computer is connected to the Internet")
                 except sr.UnknownValueError:
-                    speakText("I didn't quite catch that. Please try again!")
+                    say("I didn't quite catch that. Please try again!")
                     continue
 
                 if command in stopGameArray:
-                    speakText("Goodbye!")
+                    say("Goodbye!")
                     pygame.quit()
                     sys.exit()
 
@@ -225,11 +237,11 @@ def placeBoats():
 
                 #check for errors like B4 = "before" or A2 = "82"
                 if len(command) > 3 or command[0].isdigit():
-                    speakText("I don't understand that. Please try again more slowly!")
+                    say("I don't understand that. Please try again more slowly!")
                     continue
                 #check for errors like F7 = "ff7"
                 elif not command[1].isdigit():
-                    speakText("That command is invalid. Please try again more slowly!")
+                    say("That command is invalid. Please try again more slowly!")
                     continue
 
                 #fixes errors like H8 = "h8"
@@ -241,7 +253,7 @@ def placeBoats():
 
                 #check for errors if the user says something like "K4"
                 if command[0] not in letterArray:
-                    speakText("That letter isn't valid. Please try a different letter or try again more slowly!")
+                    say("That letter isn't valid. Please try a different letter or try again more slowly!")
                     continue
 
                 print("Current orientation: ", orient)
@@ -254,22 +266,22 @@ def placeBoats():
 
                 if isAllowed:
                     print("Allowed!")
-                    speakText("Boat placed.")
+                    say("Boat placed.")
                     valid = True
                 else:
                     print("Not allowed!")
-                    speakText("That position isn't valid due to boat size and orientation. Please try another space.")
+                    say("That position isn't valid due to boat size and orientation. Please try another space.")
                     valid = False
 
             #increment while loop if command was "horizontal" or "vertical"
             boatsPlaced += 1
 
         elif command in stopGameArray:
-            speakText("Goodbye!")
+            say("Goodbye!")
             pygame.quit()
             sys.exit()
         else:
-            speakText("I couldn't recognize that. Please try again.")
+            say("I couldn't recognize that. Please try again.")
 
 def checkPosition(orient, size, square):
     #first split the square var into letter and number
@@ -340,7 +352,7 @@ def checkPosition(orient, size, square):
         return False
 
 def player_turn():
-    speakText("Which coordinate would you like to bomb?")
+    say("Which coordinate would you like to bomb?")
 
     coordinate = recognize_speech()
     coordinate = validateCoordinates(coordinate)
@@ -351,17 +363,17 @@ def player_turn():
     if opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 1:
         print('Hit!')
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = 'X'
-        speakText("Congratulations! You scored a hit!")
+        say("Congratulations! You scored a hit!")
         playerHits += 1
 
     elif opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 'X' or opponentShips[ord(vertical) - ord('A')][int(horizontal)] == '*':
-        speakText("You have already bombed that spot. Please choose another")
+        say("You have already bombed that spot. Please choose another")
         player_turn()
         return
 
     else:
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = '*'
-        speakText("Sorry, your bomb did not land a hit")
+        say("Sorry, your bomb did not land a hit")
 
 def opponent_turn():
     horizontal = random.randint(0, 9)
@@ -372,11 +384,11 @@ def opponent_turn():
         return
 
     elif userShips[vertical][horizontal] == '0':
-        speakText("Your opponent chose coordinate " + vertical + horizontal + " and missed")
+        say("Your opponent chose coordinate " + vertical + horizontal + " and missed")
         userShips[vertical][horizontal] = '*'
 
     elif userShips[vertical][horizontal] == '1':
-        speakText("Your opponent chose coordinate " + vertical + horizontal + " and hit")
+        say("Your opponent chose coordinate " + vertical + horizontal + " and hit")
         userShips[vertical][horizontal] = 'X'
         opponentHits += 1
 
@@ -393,11 +405,11 @@ def turn_loop():
     while True:
         player_turn()
         if playerHits == 17:
-            speakText("Congratulations! You have sunk all the enemy ships.")
+            say("Congratulations! You have sunk all the enemy ships.")
             break
         opponent_turn()
         if opponentHits == 17:
-            speakText("Sorry, all your ships have been sunk.")
+            say("Sorry, all your ships have been sunk.")
             break
 
 
@@ -419,30 +431,30 @@ def game_intro():
     validCommand = False
     while not validCommand:
         command = ""
-        speakText("Would you like to hear the rules?")
+        say("Would you like to hear the rules?")
         with mic as source:
-            speakText("Hold on a moment")
+            say("Hold on a moment")
             r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:")
+            say("Now say your command:")
             audio = r.listen(source)
 
         try:
             print(r.recognize_google(audio))
             command = r.recognize_google(audio)
         except sr.RequestError:
-            speakText("The Google API didn't work for some reason")
-            speakText("Make sure this computer is connected to the Internet")
+            say("The Google API didn't work for some reason")
+            say("Make sure this computer is connected to the Internet")
         except sr.UnknownValueError:
-            speakText("I didn't quite catch that. Please try again!")
+            say("I didn't quite catch that. Please try again!")
 
         if command == "yes":
             validCommand = True
             sayCommands()
         elif command == "no":
             validCommand = True
-            speakText("Alright.")
+            say("Alright.")
         elif command in stopGameArray:
-            speakText("Goodbye!")
+            say("Goodbye!")
             pygame.quit()
             sys.exit()
 
@@ -452,9 +464,9 @@ def game_intro():
             if event.type == pygame.QUIT:
                 sys.exit()
         with mic as source:
-            speakText("Hold on a moment")
+            say("Hold on a moment")
             r.adjust_for_ambient_noise(source)
-            speakText("Now say your command:")
+            say("Now say your command:")
             audio = r.listen(source)
 
         try:
@@ -463,19 +475,19 @@ def game_intro():
             intro = False
             break
         except sr.RequestError:
-            speakText("The Google API didn't work for some reason")
-            speakText("Make sure this computer is connected to the Internet")
+            say("The Google API didn't work for some reason")
+            say("Make sure this computer is connected to the Internet")
         except sr.UnknownValueError:
-            speakText("Whoops! You just spoke some nonsense. Try again!")
+            say("Whoops! You just spoke some nonsense. Try again!")
 
     if command == "start" or command == "start game":
         game_loop()
     elif command in stopGameArray:
-        speakText("Goodbye!")
+        say("Goodbye!")
         pygame.quit()
         sys.exit()
     else:
-        speakText("Sorry, that isn't a valid response. Please try again.")
+        say("Sorry, that isn't a valid response. Please try again.")
 
 def game_loop():
     #render the game screen with titles and boards
