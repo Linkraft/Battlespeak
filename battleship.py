@@ -3,6 +3,7 @@ import speech_recognition as sr
 from gtts import gTTS
 from tempfile import TemporaryFile
 from array import *
+from random import *
 
 #sprites from https://opengameart.org/content/battleships
 
@@ -20,6 +21,7 @@ dark_blue = 53, 88, 143
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Battlespeak')
 
+bg_img = pygame.image.load('assets/Intro-BG.png')
 gridImg = pygame.image.load('assets/grid.png')
 fiveBoat = pygame.image.load('assets/fiveBoatV.png')
 fourBoat = pygame.image.load('assets/fourBoatV.png')
@@ -72,12 +74,22 @@ def say(speech):
     except Exception:
         raise
 
+def waitOptions():
+    waitArray = ["Hang on a minute.", "Wait just a second.", "Hold on, please.", "Give me a second.", "Hang on just a second."]
+    option = randint(0,4);
+    say(waitArray[option]);
+
+def confirmOptions():
+    confirmArray = ["Okay, I'm ready. What's your command?", "Alright! What is your command?", "Okay. What's your command?"]
+    option = randint(0,2);
+    say(confirmArray[option]);
+
 def recognize_speech():
     while True:
         with mic as source:
-            say("Hold on a moment")
+            waitOptions()
             r.adjust_for_ambient_noise(source)
-            say("Now say your command:")
+            confirmOptions()
             audio = r.listen(source)
             try:
                 print(r.recognize_google(audio))
@@ -160,9 +172,9 @@ def placeBoats():
         say("Would you like this boat to be horizontal or vertical?")
 
         with mic as source:
-            say("Hold on a moment")
+            waitOptions()
             r.adjust_for_ambient_noise(source)
-            say("Now say your command:")
+            confirmOptions()
             audio = r.listen(source)
 
         try:
@@ -206,9 +218,9 @@ def placeBoats():
                 say("Which square of the grid should the tip of this boat be placed?")
                 command = ""
                 with mic as source:
-                    say("Hold on a moment")
+                    waitOptions()
                     r.adjust_for_ambient_noise(source)
-                    say("Now say your command:")
+                    confirmOptions()
                     audio = r.listen(source)
 
                 try:
@@ -222,7 +234,7 @@ def placeBoats():
                     continue
 
                 if command in stopGameArray:
-                    say("Goodbye!")
+                    say("Thanks for playing!")
                     pygame.quit()
                     sys.exit()
 
@@ -277,7 +289,7 @@ def placeBoats():
             boatsPlaced += 1
 
         elif command in stopGameArray:
-            say("Goodbye!")
+            say("Thanks for playing!")
             pygame.quit()
             sys.exit()
         else:
@@ -415,7 +427,7 @@ def turn_loop():
 
 
 def game_intro():
-    screen.fill(pale_blue)
+    screen.blit(bg_img, [0,0])
 
     largeFont = pygame.font.Font('freesansbold.ttf', 48)
     font = pygame.font.Font('freesansbold.ttf', 28)
@@ -433,9 +445,9 @@ def game_intro():
         command = ""
         say("Would you like to hear the rules?")
         with mic as source:
-            say("Hold on a moment")
+            waitOptions()
             r.adjust_for_ambient_noise(source)
-            say("Now say your command:")
+            confirmOptions()
             audio = r.listen(source)
 
         try:
@@ -454,7 +466,7 @@ def game_intro():
             validCommand = True
             say("Alright.")
         elif command in stopGameArray:
-            say("Goodbye!")
+            say("Thanks for playing!")
             pygame.quit()
             sys.exit()
 
@@ -464,9 +476,9 @@ def game_intro():
             if event.type == pygame.QUIT:
                 sys.exit()
         with mic as source:
-            say("Hold on a moment")
+            waitOptions()
             r.adjust_for_ambient_noise(source)
-            say("Now say your command:")
+            confirmOptions()
             audio = r.listen(source)
 
         try:
@@ -483,7 +495,7 @@ def game_intro():
     if command == "start" or command == "start game":
         game_loop()
     elif command in stopGameArray:
-        say("Goodbye!")
+        say("Thanks for playing!")
         pygame.quit()
         sys.exit()
     else:
