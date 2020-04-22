@@ -120,8 +120,9 @@ def sayCommands():
     say("To tell the program what coordinates you would like\
             to bomb, please say the coordinates in this form:")
     say("D1")
-    say("where, D1, would be replaced with your desired coordinates")
-    say("Finally, to begin the game, you can tell me to start or begin the game")
+    say("where, D1, would be replaced with your desired coordinates.")
+    say("To begin the game, you can tell me to start or begin the game. \
+         Finally, if you want to stop playing at any time, you can tell me to end or quit the game.")
 
 def validateCoordinates(command):
     while True:
@@ -294,7 +295,6 @@ def placeBoats():
                     valid = True
                 else:
                     print("Not allowed!")
-                    say("That position is not valid due to boat size and how your boat is oriented. Please try another space.")
                     valid = False
 
             #increment while loop if command was "horizontal" or "vertical"
@@ -336,6 +336,7 @@ def boatMoveGraphics(boatImg, location):
 
 
 def checkPosition(orient, size, square):
+
     #first split the square var into letter and number
     letter = square[0]
     number = 0
@@ -351,57 +352,88 @@ def checkPosition(orient, size, square):
         if size == 5:
             invalidArray = ['G', 'H', 'I', 'J']
             if letter in invalidArray:
+                invalidMsg()
                 return False
-            else:
-                return True
         elif size == 4:
             invalidArray = ['H', 'I', 'J']
             if letter in invalidArray:
+                invalidMsg()
                 return False
-            else:
-                return True
         elif size == 3:
             invalidArray = ['I', 'J']
             if letter in invalidArray:
+                invalidMsg()
                 return False
-            else:
-                return True
         #if size is 2
         else:
             if letter == 'J':
+                invalidMsg()
                 return False
-            else:
-                return True
-        #default return statement
-        return False
-
 
     #if horiz, invalid numbers are (7-10 for 5boat), (8-10 for 4boat), (9-10 for 3boat), (10 for 2boat)
     else:
         if size == 5:
             if number > 6:
+                invalidMsg()
                 return False
-            elif number > 0:
-                return True
+            elif number <= 0:
+                say("Your number must be between 1 and 10")
+                return False
         elif size == 4:
             if number > 7:
+                invalidMsg()
                 return False
-            elif number > 0:
-                return True
+            elif number <= 0:
+                say("Your number must be between 1 and 10")
+                return False
         elif size == 3:
             if number > 8:
+                invalidMsg()
                 return False
-            elif number > 0:
-                return True
+            elif number <= 0:
+                say("Your number must be between 1 and 10")
+                return False
 
         #size == 2
         else:
             if number > 9:
+                invalidMsg()
                 return False
-            elif number > 0:
-                return True
-        #default return statement
-        return False
+            elif number <= 0:
+                say("Your number must be between 1 and 10")
+                return False
+
+    #if it reaches this part, the boat size and orientation is valid
+    #Now check to see if the boat is being placed in a position that is already occupied
+    isOccupied = False
+    isValid = True
+
+    #first, check the array to see if the spaces are occupied (1) or not (0)
+    index1 = ord(letter[0]) - 65
+    index2 = number - 1
+
+    #start at userShips[index1][index2]
+    #iterate through "size" times, so 0 to "size" - 1
+    for i in range(size):
+        if userShips[index1][index2] == 1:
+            say("There's already a boat there!")
+            return False
+        else:
+            userShips[index1][index2] = 1;
+            isValid = True
+
+            #update the indexes based on orientation
+            #if vertical, we want to increment index1
+            #if horizontal, we want to increment index2
+            if orient == "vertical":
+                index1 = index1 + 1
+            else:
+                index2 = index2 + 1
+
+    return isValid
+
+def invalidMsg():
+    say("That position is not valid due to boat size and how your boat is oriented. Please try another space.")
 
 def player_turn():
     say("Which coordinate would you like to bomb?")
