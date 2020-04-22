@@ -284,6 +284,12 @@ def placeBoats():
                 if isAllowed:
                     print("Allowed!")
                     boatMoveGraphics(boatArray[boatsPlaced], command)
+                    #clear the vertical space
+                    pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
+                    #clear the horizontal space
+                    pygame.draw.rect(screen, blue, ((width // 4 + 50), 500, 400, 100))
+
+                    pygame.display.update()
                     say("Boat placed.")
                     valid = True
                 else:
@@ -303,18 +309,28 @@ def placeBoats():
 
 def boatMoveGraphics(boatImg, location):
     #blit the boatImg to the appropriate part of the screen based on location letter + number
-    squareArray = [[28, 74, 116, 161, 204, 248, 292, 337, 380, 422], \
-                   [57, 99, 139, 185, 228, 271, 315, 359, 403, 475]]
+    squareArray = [[57, 99, 139, 185, 228, 271, 315, 359, 403, 475], \
+                    [28, 74, 116, 161, 204, 248, 292, 337, 380, 422]]
 
     #get the letter value as an int 0-9 and the number value as an int 0-9
     #letter is in ASCII form, so subtract 65 so that 'A' corresponds to 0
     letter = ord(location[0]) - 65
-    number = int(location[1]) - 1
+    number = 0
 
-    xCoord = squareArray[0][letter]
-    yCoord = squareArray[1][number]
+    #if the number coord is a single digit, find that digit
+    if len(location) < 3:
+        number = int(location[1]) - 1
+    #else, it's a double digit which can only be 10 (9 when indexed in an array)
+    else:
+        number = 9
 
-    
+    xCoord = squareArray[1][number]
+    yCoord = squareArray[0][letter]
+
+    print("X coordinate is ", xCoord)
+    print("Y coordinate is ", yCoord)
+
+
 
     screen.blit(boatImg, [xCoord, yCoord])
 
