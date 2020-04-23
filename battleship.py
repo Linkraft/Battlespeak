@@ -29,6 +29,8 @@ fourBoat = pygame.image.load('assets/fourBoatV.png')
 threeBoat1 = pygame.image.load('assets/threeBoat1V.png')
 threeBoat2 = pygame.image.load('assets/threeBoat2V.png')
 twoBoat = pygame.image.load('assets/twoBoatV.png')
+redx = pygame.image.load('assets/redx.png')
+whitex = pygame.image.load('assets/whitex.png')
 
 boatArray = [fiveBoat, fourBoat, threeBoat1, threeBoat2, twoBoat]
 sizeBoatArray = [5, 4, 3, 3, 2]
@@ -330,10 +332,39 @@ def boatMoveGraphics(boatImg, location):
     print("X coordinate is ", xCoord)
     print("Y coordinate is ", yCoord)
 
-
-
     screen.blit(boatImg, [xCoord, yCoord])
 
+def placeHitMarker(player, location, hit):
+    
+    marker = whitex
+    squareArray = [[57, 99, 139, 185, 228, 271, 315, 359, 403, 475], \
+                    [28, 74, 116, 161, 204, 248, 292, 337, 380, 422]]
+
+    #get the letter value as an int 0-9 and the number value as an int 0-9
+    #letter is in ASCII form, so subtract 65 so that 'A' corresponds to 0
+    letter = ord(location[0]) - 65
+    number = 0
+
+    #if the number coord is a single digit, find that digit
+    if len(location) < 3:
+        number = int(location[1]) - 1
+    #else, it's a double digit which can only be 10 (9 when indexed in an array)
+    else:
+        number = 9
+
+    xCoord = squareArray[1][number]
+    yCoord = squareArray[0][letter]
+
+    print("X coordinate is ", xCoord)
+    print("Y coordinate is ", yCoord)
+
+    if (player == True):
+        xCoord += 570
+    
+    if (hit):
+        marker = redx
+    
+    screen.blit(marker, [xCoord, yCoord])
 
 def checkPosition(orient, size, square):
 
@@ -453,7 +484,6 @@ def invalidMsg():
 
 def player_turn():
     global playerHits
-
     speakText("Which coordinate would you like to bomb?")
 
     coordinate = recognize_speech()
@@ -466,6 +496,7 @@ def player_turn():
         print('Hit!')
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = 'X'
         speakText("Congratulations! You scored a hit!")
+        placeHitMarker(True, coordinate, True)
         playerHits = playerHits + 1
 
     elif opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 'X' or opponentShips[ord(vertical) - ord('A')][int(horizontal)] == '*':
@@ -476,6 +507,7 @@ def player_turn():
     else:
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = '*'
         speakText("Sorry, your bomb did not land a hit")
+        placeHitMarker(True, coordinate, False)
 
 def opponent_turn():
     global opponentHits
@@ -496,12 +528,14 @@ def opponent_turn():
     
     elif userShips[vertical][horizontal] == 0:
         print('Opponent Miss')
-        speakText("Your opponent chose coordinate " + chr(vertical + 97) + str(horizontal) + " and missed")
+        placeHitMarker(False, str(chr(vertical + 65)) + str(horizontal), False)
+        speakText("Your opponent chose coordinate " + chr(vertical + 65) + str(horizontal) + " and missed")
         userShips[vertical][horizontal] = '*'
 
     elif userShips[vertical][horizontal] == 1:
         print('Opponent Hit')
-        speakText("Your opponent chose coordinate " + chr(vertical + 97) + str(horizontal) + " and hit")
+        placeHitMarker(False, str(chr(vertical + 65)) + str(horizontal), True)
+        speakText("Your opponent chose coordinate " + chr(vertical + 65) + str(horizontal) + " and hit")
         userShips[vertical][horizontal] = 'X'
         opponentHits += 1
 
@@ -615,17 +649,16 @@ def game_loop():
     #temporary placement of opponent battleships
 
     pygame.display.update()
-
     
     #user places their boats
     placeBoats()
     say("All boats have been placed. Now it's time to start the game!")
-
+    
     turn_loop()
 
     
 
-
+    
 
 if __name__ == "__main__":
     r = sr.Recognizer()
