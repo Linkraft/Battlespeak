@@ -89,8 +89,9 @@ def recognize_speech():
         with mic as source:
             audio = r.listen(source)
             try:
-                print(r.recognize_google(audio))
-                command = r.recognize_google(audio)
+                speech = r.recognize_google(audio)
+                print(speech)
+                command = speech
                 break
             except sr.RequestError:
                 say("The Google API didn't work for some reason")
@@ -173,8 +174,9 @@ def placeBoats():
             audio = r.listen(source)
 
         try:
-            print(r.recognize_google(audio))
-            command = r.recognize_google(audio)
+            speech = r.recognize_google(audio)
+            print(speech)
+            command = speech
         except sr.RequestError:
             say("The Google API didn't work for some reason")
             say("Make sure this computer is connected to the Internet")
@@ -216,8 +218,9 @@ def placeBoats():
                     audio = r.listen(source)
 
                 try:
-                    print(r.recognize_google(audio))
-                    command = r.recognize_google(audio)
+                    speech = r.recognize_google(audio)
+                    print(speech)
+                    command = speech
                 except sr.RequestError:
                     say("The Google API didn't work for some reason")
                     say("Make sure this computer is connected to the Internet")
@@ -319,7 +322,7 @@ def boatMoveGraphics(boatImg, location):
     screen.blit(boatImg, [xCoord, yCoord])
 
 def placeHitMarker(player, location, hit):
-    
+
     marker = whitex
     squareArray = [[57, 99, 139, 185, 228, 271, 315, 359, 403, 475], \
                     [28, 74, 116, 161, 204, 248, 292, 337, 380, 422]]
@@ -344,10 +347,10 @@ def placeHitMarker(player, location, hit):
 
     if (player == True):
         xCoord += 570
-    
+
     if (hit):
         marker = redx
-    
+
     screen.blit(marker, [xCoord, yCoord])
     pygame.display.update()
 
@@ -493,7 +496,7 @@ def player_turn():
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = '*'
         say("Sorry, your bomb did not land a hit")
         placeHitMarker(True, coordinate, False)
-        
+
 
 def opponent_turn():
     global opponentHits
@@ -564,8 +567,9 @@ def game_intro():
             audio = r.listen(source)
 
         try:
-            print(r.recognize_google(audio))
-            command = r.recognize_google(audio)
+            speech = r.recognize_google(audio)
+            print(speech)
+            command = speech
         except sr.RequestError:
             say("The Google API didn't work for some reason")
             say("Make sure this computer is connected to the Internet")
@@ -594,8 +598,9 @@ def game_intro():
             audio = r.listen(source)
 
         try:
-            print(r.recognize_google(audio))
-            command = r.recognize_google(audio)
+            speech = r.recognize_google(audio)
+            print(speech)
+            command = speech
         except sr.RequestError:
             say("The Google API didn't work for some reason")
             say("Make sure this computer is connected to the Internet")
@@ -635,17 +640,17 @@ def game_loop():
     #temporary placement of opponent battleships
 
     pygame.display.update()
-    
+
     turn_loop()
     #user places their boats
     placeBoats()
     say("All boats have been placed. Now it's time to start the game!")
-    
-    
 
 
 
-    
+
+
+
 
 if __name__ == "__main__":
     r = sr.Recognizer()
