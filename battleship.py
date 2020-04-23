@@ -203,7 +203,7 @@ def placeBoats():
             while not valid:
                 say("Which square of the grid should the tip of this boat be placed?")
                 command = recognize_speech()
-                command = validateCoordinates()
+                command = validateCoordinates(command)
                 if command in stopGameArray:
                     say("Thanks for playing!")
                     pygame.quit()
