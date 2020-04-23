@@ -82,16 +82,6 @@ def say(speech):
     except Exception:
         raise
 
-def waitOptions():
-    waitArray = ["Hang on a minute.", "Wait just a second.", "Hold on, please.", "Give me a second.", "Hang on just a second."]
-    option = randint(0,4)
-    say(waitArray[option])
-
-def confirmOptions():
-    confirmArray = ["Okay, I'm ready. What's your command?", "Alright! What is your command?", "Okay. What's your command?"]
-    option = randint(0,2)
-    say(confirmArray[option])
-
 def recognize_speech():
     while True:
         with mic as source:
