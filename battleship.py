@@ -101,21 +101,15 @@ def recognize_speech():
                 command = r.recognize_google(audio)
                 break
             except sr.RequestError:
-                speakText("The Google API didn't work for some reason")
-                speakText("Make sure this computer is connected to the Internet")
+                say("The Google API didn't work for some reason")
+                say("Make sure this computer is connected to the Internet")
             except sr.UnknownValueError:
-                speakText("I didn't quite catch that. Please try again!")
+                say("I didn't quite catch that. Please try again!")
     return command
 
-def speakText(speech):
-    file = str(uuid.uuid1()) + '.mp3'
-    mp3 = gtts.gTTS(text=speech, lang='en', slow=False)
-    mp3.save(file)
-    playsound.playsound(file, True)
-    os.remove(file)
 
 def sayRules():
-    speakText("Welcome to Battlespeak!\
+    say("Welcome to Battlespeak!\
             This is a voice-controlled version of the popular\
             board game Battleship. To play, you must give commands\
             to the program with your voice. Please note that voice\
@@ -123,8 +117,8 @@ def sayRules():
             when waiting to input a command or when waiting for recognition.")
 
 def sayCommands():
-    speakText("Here are the list of commands available to you:")
-    speakText("To tell the program what coordinates you would like\
+    say("Here are the list of commands available to you:")
+    say("To tell the program what coordinates you would like\
             to bomb, please say the coordinates in this form:")
     say("D1")
     say("where, D1, would be replaced with your desired coordinates.")
@@ -144,12 +138,12 @@ def validateCoordinates(command):
 
         #check for errors like B4 = "before" or A2 = "82"
         if len(command) > 3 or command[0].isdigit():
-            speakText("I don't understand that. Please try again more slowly!")
+            say("I don't understand that. Please try again more slowly!")
             command = recognize_speech()
             continue
         #check for errors like F7 = "ff7"
         elif not command[1].isdigit():
-            speakText("I don't understand that. Please try again more slowly!")
+            say("I don't understand that. Please try again more slowly!")
             command = recognize_speech()
             continue
 
@@ -181,7 +175,7 @@ def placeBoats():
         #blit the boat to the screen
         screen.blit(boatArray[boatsPlaced], (width // 2 - 20, height // 2 - 100))
         pygame.display.update()
-        speakText("Would you like this boat to be horizontal or vertical?")
+        say("Would you like this boat to be horizontal or vertical?")
 
         with mic as source:
             audio = r.listen(source)
@@ -190,10 +184,10 @@ def placeBoats():
             print(r.recognize_google(audio))
             command = r.recognize_google(audio)
         except sr.RequestError:
-            speakText("The Google API didn't work for some reason")
-            speakText("Make sure this computer is connected to the Internet")
+            say("The Google API didn't work for some reason")
+            say("Make sure this computer is connected to the Internet")
         except sr.UnknownValueError:
-            speakText("I didn't quite catch that. Please try again!")
+            say("I didn't quite catch that. Please try again!")
             continue
 
         orient = ""
@@ -224,7 +218,7 @@ def placeBoats():
 
             valid = False
             while not valid:
-                speakText("Which square of the grid should the tip of this boat be placed?")
+                say("Which square of the grid should the tip of this boat be placed?")
                 command = ""
                 with mic as source:
                     audio = r.listen(source)
@@ -233,10 +227,10 @@ def placeBoats():
                     print(r.recognize_google(audio))
                     command = r.recognize_google(audio)
                 except sr.RequestError:
-                    speakText("The Google API didn't work for some reason")
-                    speakText("Make sure this computer is connected to the Internet")
+                    say("The Google API didn't work for some reason")
+                    say("Make sure this computer is connected to the Internet")
                 except sr.UnknownValueError:
-                    speakText("I didn't quite catch that. Please try again!")
+                    say("I didn't quite catch that. Please try again!")
                     continue
 
                 if command in stopGameArray:
@@ -255,11 +249,11 @@ def placeBoats():
 
                 #check for errors like B4 = "before" or A2 = "82"
                 if len(command) > 3 or command[0].isdigit():
-                    speakText("I don't understand that. Please try again more slowly!")
+                    say("I don't understand that. Please try again more slowly!")
                     continue
                 #check for errors like F7 = "ff7"
                 elif not command[1].isdigit():
-                    speakText("I don't understand that. Please try again more slowly!")
+                    say("I don't understand that. Please try again more slowly!")
                     continue
 
                 #fixes errors like H8 = "h8"
@@ -305,7 +299,7 @@ def placeBoats():
             pygame.quit()
             sys.exit()
         else:
-            speakText("I couldn't recognize that. Please try again.")
+            say("I couldn't recognize that. Please try again.")
 
 def boatMoveGraphics(boatImg, location):
     #blit the boatImg to the appropriate part of the screen based on location letter + number
@@ -454,7 +448,7 @@ def invalidMsg():
 def player_turn():
     global playerHits
 
-    speakText("Which coordinate would you like to bomb?")
+    say("Which coordinate would you like to bomb?")
 
     coordinate = recognize_speech()
     coordinate = validateCoordinates(coordinate)
@@ -465,17 +459,17 @@ def player_turn():
     if opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 1:
         print('Hit!')
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = 'X'
-        speakText("Congratulations! You scored a hit!")
+        say("Congratulations! You scored a hit!")
         playerHits = playerHits + 1
 
     elif opponentShips[ord(vertical) - ord('A')][int(horizontal)] == 'X' or opponentShips[ord(vertical) - ord('A')][int(horizontal)] == '*':
-        speakText("You have already bombed that spot. Please choose another")
+        say("You have already bombed that spot. Please choose another")
         player_turn()
         return
-    
+
     else:
         opponentShips[ord(vertical) - ord('A')][int(horizontal)] = '*'
-        speakText("Sorry, your bomb did not land a hit")
+        say("Sorry, your bomb did not land a hit")
 
 def opponent_turn():
     global opponentHits
@@ -487,21 +481,21 @@ def opponent_turn():
 
     print(vertical)
     print(horizontal)
-    
+
     print(userShips[vertical][horizontal])
 
     if userShips[vertical][horizontal] == '*' or userShips[vertical][horizontal] == 'X':
         opponent_turn()
         return
-    
+
     elif userShips[vertical][horizontal] == 0:
         print('Opponent Miss')
-        speakText("Your opponent chose coordinate " + chr(vertical + 97) + str(horizontal) + " and missed")
+        say("Your opponent chose coordinate " + chr(vertical + 97) + str(horizontal) + " and missed")
         userShips[vertical][horizontal] = '*'
 
     elif userShips[vertical][horizontal] == 1:
         print('Opponent Hit')
-        speakText("Your opponent chose coordinate " + chr(vertical + 97) + str(horizontal) + " and hit")
+        say("Your opponent chose coordinate " + chr(vertical + 97) + str(horizontal) + " and hit")
         userShips[vertical][horizontal] = 'X'
         opponentHits += 1
 
@@ -510,14 +504,14 @@ def turn_loop():
     while True:
         player_turn()
         if playerHits == 17:
-            speakText("Congratulations! You have sunk all the enemy ships.")
+            say("Congratulations! You have sunk all the enemy ships.")
             break
         opponent_turn()
         if opponentHits == 17:
-            speakText("Sorry, all your ships have been sunk.")
+            say("Sorry, all your ships have been sunk.")
             break
 
-    
+
 
 def game_intro():
     screen.blit(bg_img, [0,0])
@@ -533,24 +527,24 @@ def game_intro():
     pygame.display.update()
 
     with mic as source:
-            speakText("Please give the voice recognizer a moment to adjust to your ambient noise")
+            say("Please give the voice recognizer a moment to adjust to your ambient noise")
             r.adjust_for_ambient_noise(source)
-    
+
     validCommand = False
     while validCommand != True:
         command = ""
         with mic as source:
-            speakText("Would you like to hear the rules?")
+            say("Would you like to hear the rules?")
             audio = r.listen(source)
 
         try:
             print(r.recognize_google(audio))
             command = r.recognize_google(audio)
         except sr.RequestError:
-            speakText("The Google API didn't work for some reason")
-            speakText("Make sure this computer is connected to the Internet")
+            say("The Google API didn't work for some reason")
+            say("Make sure this computer is connected to the Internet")
         except sr.UnknownValueError:
-            speakText("I didn't quite catch that. Please try again!")
+            say("I didn't quite catch that. Please try again!")
 
         if command == "yes":
             validCommand = True
@@ -563,7 +557,7 @@ def game_intro():
             pygame.quit()
             sys.exit()
 
-    speakText("To begin the game, say start")
+    say("To begin the game, say start")
 
     intro = True
     while intro:
@@ -577,10 +571,10 @@ def game_intro():
             print(r.recognize_google(audio))
             command = r.recognize_google(audio)
         except sr.RequestError:
-            speakText("The Google API didn't work for some reason")
-            speakText("Make sure this computer is connected to the Internet")
+            say("The Google API didn't work for some reason")
+            say("Make sure this computer is connected to the Internet")
         except sr.UnknownValueError:
-            speakText("Whoops! You just spoke some nonsense. Try again!")
+            say("Whoops! You just spoke some nonsense. Try again!")
 
         if command in startGameArray:
             intro = False
@@ -616,14 +610,14 @@ def game_loop():
 
     pygame.display.update()
 
-    
+
     #user places their boats
     placeBoats()
     say("All boats have been placed. Now it's time to start the game!")
 
     turn_loop()
 
-    
+
 
 
 
