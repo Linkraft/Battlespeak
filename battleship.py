@@ -349,6 +349,7 @@ def placeHitMarker(player, location, hit):
         marker = redx
     
     screen.blit(marker, [xCoord, yCoord])
+    pygame.display.update()
 
 def checkPosition(orient, size, square):
 
@@ -635,11 +636,12 @@ def game_loop():
 
     pygame.display.update()
     
+    turn_loop()
     #user places their boats
     placeBoats()
     say("All boats have been placed. Now it's time to start the game!")
     
-    turn_loop()
+    
 
 
 
