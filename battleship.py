@@ -122,7 +122,7 @@ def validateCoordinates(command):
     while True:
         #input checks
         #check for speech recognition error where I1 is recognized always as "I won"
-        if command == "I won":
+        if "I won" in command:
             command = "I1"
             break
 
@@ -168,26 +168,18 @@ def placeBoats():
         #blit the boat to the screen
         screen.blit(boatArray[boatsPlaced], (width // 2 - 20, height // 2 - 100))
         pygame.display.update()
+
         say("Would you like this boat to be horizontal or vertical?")
+        command = recognize_speech()
+        
+        if "horizontal" in command:
+            command = "horizontal"
+        elif "vertical" in command:
+            command = "vertical"
 
-        with mic as source:
-            audio = r.listen(source)
-
-        try:
-            speech = r.recognize_google(audio)
-            print(speech)
-            command = speech
-        except sr.RequestError:
-            say("The Google API didn't work for some reason")
-            say("Make sure this computer is connected to the Internet")
-        except sr.UnknownValueError:
-            say("I didn't quite catch that. Please try again!")
-            continue
-
-        orient = ""
         if command == "horizontal" or command == "vertical":
+            orient = "horizontal"
             if command == "horizontal":
-                orient = "horizontal"
                 #clear the vertical space
                 pygame.draw.rect(screen, blue, ((width // 2 - 40), 50, 80, 400))
                 #display the boat horizontally
@@ -207,61 +199,15 @@ def placeBoats():
                 screen.blit(boatArray[boatsPlaced], (width // 2 - (imgWidth // 2), height // 2 + 220))
                 pygame.display.update()
 
-            elif command == "vertical":
-                orient = "vertical"
-
             valid = False
             while not valid:
                 say("Which square of the grid should the tip of this boat be placed?")
-                command = ""
-                with mic as source:
-                    audio = r.listen(source)
-
-                try:
-                    speech = r.recognize_google(audio)
-                    print(speech)
-                    command = speech
-                except sr.RequestError:
-                    say("The Google API didn't work for some reason")
-                    say("Make sure this computer is connected to the Internet")
-                except sr.UnknownValueError:
-                    say("I didn't quite catch that. Please try again!")
-                    continue
-
+                command = recognize_speech()
+                command = validateCoordinates()
                 if command in stopGameArray:
                     say("Thanks for playing!")
                     pygame.quit()
                     sys.exit()
-
-                #input checks
-                #check for speech recognition error where I1 is recognized always as "I won"
-                if command == "I won":
-                    command = "I1"
-                    break
-
-                #fixes errors like I4 = "I-4"
-                command = command.replace('-', '')
-
-                #check for errors like B4 = "before" or A2 = "82"
-                if len(command) > 3 or command[0].isdigit():
-                    say("I don't understand that. Please try again more slowly!")
-                    continue
-                #check for errors like F7 = "ff7"
-                elif not command[1].isdigit():
-                    say("I don't understand that. Please try again more slowly!")
-                    continue
-
-                #fixes errors like H8 = "h8"
-                command = command.capitalize()
-
-                #fixes error where recognition thinks "F" sounds like "S" very often
-                if command[0] == 'S':
-                    command[0] = 'F'
-
-                #check for errors if the user says something like "K4"
-                if command[0] not in letterArray:
-                    say("That letter is not valid. Please try a different letter or try again more slowly!")
-                    continue
 
                 print("Current orientation: ", orient)
                 print("Current size of boat: ", sizeBoatArray[boatsPlaced])
@@ -530,7 +476,6 @@ def opponent_turn():
         opponentHits += 1
 
 def turn_loop():
-
     while True:
         player_turn()
         if playerHits == 17:
@@ -562,25 +507,12 @@ def game_intro():
 
     validCommand = False
     while validCommand != True:
-        command = ""
-        with mic as source:
-            say("Would you like to hear the rules?")
-            audio = r.listen(source)
-
-        try:
-            speech = r.recognize_google(audio)
-            print(speech)
-            command = speech
-        except sr.RequestError:
-            say("The Google API didn't work for some reason")
-            say("Make sure this computer is connected to the Internet")
-        except sr.UnknownValueError:
-            say("I didn't quite catch that. Please try again!")
-
-        if command == "yes":
+        say("Would you like to hear the rules?")
+        command = recognize_speech()
+        if "yes" in command:
             validCommand = True
             sayRules()
-        elif command == "no":
+        elif "no" in command:
             validCommand = True
             say("Okay, I won't tell you the rules.")
         elif command in stopGameArray:
@@ -588,25 +520,13 @@ def game_intro():
             pygame.quit()
             sys.exit()
 
-    say("To begin the game, say start")
-
     intro = True
     while intro:
+        say("To begin the game, say start")
+        command = recognize_speech()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-        with mic as source:
-            audio = r.listen(source)
-
-        try:
-            speech = r.recognize_google(audio)
-            print(speech)
-            command = speech
-        except sr.RequestError:
-            say("The Google API didn't work for some reason")
-            say("Make sure this computer is connected to the Internet")
-        except sr.UnknownValueError:
-            say("Whoops! You just spoke some nonsense. Try again!")
 
         if command in startGameArray:
             intro = False
@@ -642,19 +562,13 @@ def game_loop():
 
     pygame.display.update()
 
-
     #user places their boats
     placeBoats()
     say("All boats have been placed. Now it's time to start the game!")
     turn_loop()
 
-
-
-
-
-
-
 if __name__ == "__main__":
     r = sr.Recognizer()
+    r.operation_timeout = 10
     mic = sr.Microphone(device_index=1)
     game_intro()
