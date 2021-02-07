@@ -1,7 +1,12 @@
 # Battlespeak
 [![](https://github.com/jordansmithsgames/jordansmithsgames/blob/main/readmes/battlespeak/battleboard.png)](https://www.youtube.com/embed/awVEcbdd7Bg)
 
-Battleship game that utilizes speech for interaction between the player and a computer opponent
+Remake of the popular board game [Battleship](https://en.wikipedia.org/wiki/Battleship_(game)) that utilizes speech for all interactions between the player and the computer opponent.
+
+# Controls
+For controlling the program you must use the following speech commands:
+- When placing your ships, indicate where your tip of your ship will be located (i.e. "A4") as well as the orientation of your ship (i.e. "horizontal")
+- When it is your turn, call out the tile you'd like to fire at on the opponent's board by saying the corresponding letter and number coordinates (i.e. "C3")
 
 ## Dependencies
 - Python v. 3.6.0
