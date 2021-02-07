@@ -1,4 +1,6 @@
 # Battlespeak
+[![](https://github.com/jordansmithsgames/jordansmithsgames/blob/main/readmes/battlespeak/battleboard.png)](https://www.youtube.com/embed/awVEcbdd7Bg)
+
 Battleship game that utilizes speech for interaction between the player and a computer opponent
 
 ## Dependencies
